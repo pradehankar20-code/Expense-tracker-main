@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SpendWise AI | Smart Expense Tracker & UPI Hub</title>
+    
+    <!-- PWA & Mobile Web App Meta -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SpendWise">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Chart.js for Visual Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- QRCode.js for Direct UPI QR Code Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Html5-Qrcode for Phone Camera Live QR Scanning -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Tesseract.js for UPI Payment Screenshot & Receipt OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <!-- Canvas Confetti for Budget & Savings Celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Authentication / Login Screen Overlay -->
+    <div id="loginScreen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-header-top">
+                <button type="button" class="icon-btn" onclick="toggleTheme()" title="Toggle Light / Dark Mode" aria-label="Toggle theme">
+                    <i class="fa-solid fa-moon" id="loginThemeIcon"></i>
+                </button>
+            </div>
+
+            <!-- Brand Logo -->
+            <div class="auth-brand">
+                <div class="logo-icon auth-logo-icon">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h2>SpendWise <span class="gradient-text">AI</span></h2>
+                <p class="auth-subtitle">Sign in to access your financial dashboard</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form" onsubmit="handleLoginSubmit(event)">
+                <div class="form-group">
+                    <label for="loginUsername"><i class="fa-solid fa-user"></i> User ID / Username</label>
+                    <input type="text" id="loginUsername" placeholder="e.g. admin" required autocomplete="username" autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fa-solid fa-lock"></i> Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
+                            <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="auth-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMeCheckbox" checked>
+                        <span>Remember me</span>
+                    </label>
+                </div>
+
+                <!-- Error Message Alert -->
+                <div id="loginErrorMsg" class="auth-error" style="display: none;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="loginErrorText">Invalid credentials</span>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block auth-btn" id="loginSubmitBtn">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Sign In</span>
+                </button>
+            </form>
+
+            <!-- Dummy Credentials Demo Box -->
+            <div class="demo-credentials-box">
+                <div class="demo-creds-header">
+                    <span class="chip-label"><i class="fa-solid fa-key"></i> <strong>Demo Credentials</strong></span>
+                    <button type="button" class="btn-demo-autofill" onclick="autoFillDemoCredentials()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 1-Click Auto-Fill
+                    </button>
+                </div>
+                <div class="demo-creds-details">
+                    <div class="cred-item">
+                        <span class="cred-label">User ID:</span>
+                        <code class="cred-code" onclick="autoFillDemoCredentials()" title="Click to fill">admin</code>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-label">Password:</span>
+                        <code class="cred-code" onclick="autoFillDemoCredentials()" title="Click to fill">admin123</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-layout" id="appLayout">
+        
+        <!-- Header Bar -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div class="brand-info">
+                        <h2>SpendWise <span class="gradient-text">AI</span></h2>
+                        <span class="sub-label">Smart Tracker & UPI Hub</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Central Live Quick Stats & Phone Connect -->
+            <div class="header-center">
+                <div class="quick-stat-chip">
+                    <span class="chip-label"><i class="fa-solid fa-scale-balanced"></i> Net:</span>
+                    <span class="chip-val" id="headerNetBal">₹0</span>
+                </div>
+                
+                <!-- Open On Phone Button -->
+                <button class="quick-stat-chip phone-connect-chip" onclick="openPhoneConnectModal()" title="Open and install app on your mobile phone">
+                    <span class="pulse-dot"></span>
+                    <span><i class="fa-solid fa-mobile-screen-button"></i> Open on Phone</span>
+                </button>
+
+                <!-- PWA Install Button (Shown on mobile browser) -->
+                <button class="btn btn-sm btn-primary" id="pwaInstallBtn" style="display: none;" onclick="triggerPwaInstall()">
+                    <i class="fa-solid fa-download"></i> Install App
+                </button>
+            </div>
+
+            <!-- Header Controls & Actions -->
+            <div class="header-right">
+                <!-- User Profile & Logout -->
+                <div class="user-profile-badge" id="userProfileBadge" style="display: none;">
+                    <div class="user-avatar-sm">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="user-meta">
+                        <span class="user-name" id="loggedInUsername">admin</span>
+                    </div>
+                    <button type="button" class="icon-btn logout-btn" onclick="handleLogout()" title="Log Out" aria-label="Log Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+
+                <!-- Currency Selector -->
+                <div class="currency-dropdown-wrap">
+                    <select id="currencySelect" title="Select Currency" aria-label="Select Currency">
+                        <option value="INR" selected>₹ INR</option>
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="GBP">£ GBP</option>
+                        <option value="AED">AED</option>
+                    </select>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button class="icon-btn" id="themeToggleBtn" title="Toggle Light / Dark Mode" aria-label="Toggle theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Data Backup / Settings Button -->
+                <button class="icon-btn" id="dataBackupBtn" title="Export / Import & Backups" aria-label="Backup and data options">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </button>
+
+                <!-- Quick Add Button -->
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Entry</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs-bar">
+            <button class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard & Analytics</span>
+            </button>
+            <button class="nav-tab" data-tab="upi" onclick="switchTab('upi')">
+                <i class="fa-solid fa-qrcode"></i>
+                <span>UPI Hub & Phone Sync</span>
+                <span class="tab-highlight-badge">Direct UPI</span>
+            </button>
+            <button class="nav-tab" data-tab="transactions" onclick="switchTab('transactions')">
+                <i class="fa-solid fa-receipt"></i>
+                <span>All Transactions</span>
+                <span class="badge" id="txCountBadge">0</span>
+            </button>
+            <button class="nav-tab" data-tab="ai" onclick="switchTab('ai')">
+                <i class="fa-solid fa-robot"></i>
+                <span>FinAI Assistant</span>
+                <span class="ai-sparkle-pill"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- ========================================== -->
+            <!-- TAB 1: DASHBOARD & ANALYTICS              -->
+            <!-- ========================================== -->
+            <section id="tab-dashboard" class="tab-pane active">
+                
+                <!-- Financial KPI Cards -->
+                <div class="kpi-grid">
+                    <!-- Net Balance Card -->
+                    <div class="kpi-card balance-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Total Net Balance</span>
+                            <div class="kpi-icon-wrap balance-icon">
+                                <i class="fa-solid fa-vault"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-amount" id="balValue">₹0.00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-subtext" id="kpiNetStatus">
+                                <i class="fa-solid fa-arrow-trend-up"></i> Healthy cashflow
+                            </span>
+                            <button class="ghost-link" onclick="openBudgetModal()">
+                                <i class="fa-solid fa-bullseye"></i> Set Budget
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Total Income Card -->
+                    <div class="kpi-card income-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Total Income</span>
+                            <div class="kpi-icon-wrap income-icon">
+                                <i class="fa-solid fa-arrow-down-left"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-amount" id="incValue">₹0.00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-subtext" id="incCountText">0 credits recorded</span>
+                            <span class="kpi-trend positive"><i class="fa-solid fa-circle-check"></i> Inflow</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Expense Card -->
+                    <div class="kpi-card expense-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Total Expenses</span>
+                            <div class="kpi-icon-wrap expense-icon">
+                                <i class="fa-solid fa-arrow-up-right"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-amount" id="expValue">₹0.00</div>
+                        <div class="kpi-footer">
+                            <span class="kpi-subtext" id="expRatioText">0% of income</span>
+                            <span class="kpi-trend negative"><i class="fa-solid fa-receipt"></i> Outflow</span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Budget & Savings Card -->
+                    <div class="kpi-card budget-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Monthly Budget</span>
+                            <span class="budget-badge" id="budgetPercentBadge">0% Used</span>
+                        </div>
+                        <div class="budget-progress-container">
+                            <div class="budget-progress-bar" id="budgetProgressBar" style="width: 0%;"></div>
+                        </div>
+                        <div class="budget-details">
+                            <span>Spent: <b id="budgetSpentVal">₹0</b></span>
+                            <span>Limit: <b id="budgetLimitVal">₹30,000</b></span>
+                        </div>
+                        <div class="kpi-footer">
+                            <span class="kpi-subtext" id="budgetRemainingText">₹30,000 left to spend</span>
+                            <button class="ghost-link" onclick="openBudgetModal()"><i class="fa-solid fa-pen"></i> Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Banners -->
+                <div class="action-banners-grid">
+                    <!-- Direct UPI & Phone Sync Banner -->
+                    <div class="feature-banner upi-banner" onclick="switchTab('upi')">
+                        <div class="banner-content">
+                            <div class="banner-tag"><i class="fa-solid fa-mobile-screen"></i> Direct Phone App Sync</div>
+                            <h3>Share directly from GPay, PhonePe, Paytm or Camera</h3>
+                            <p>Share payment screenshots, scan merchant QR codes with phone camera, or paste SMS alerts directly.</p>
+                        </div>
+                        <div class="banner-cta">
+                            <span class="btn btn-outline-light">Open UPI Hub <i class="fa-solid fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+
+                    <!-- AI Assistant Banner -->
+                    <div class="feature-banner ai-banner" onclick="switchTab('ai')">
+                        <div class="banner-content">
+                            <div class="banner-tag"><i class="fa-solid fa-robot"></i> FinAI Assistant</div>
+                            <h3>Ask Financial Advice or Add via Voice & Text</h3>
+                            <p>Type "Spent 350 for dinner at Subway" or speak via microphone to auto-record expenses.</p>
+                        </div>
+                        <div class="banner-cta">
+                            <span class="btn btn-outline-light">Chat with FinAI <i class="fa-solid fa-comments"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Breakdown Section -->
+                <div class="analytics-grid">
+                    <!-- Category Doughnut Chart -->
+                    <div class="glass-panel chart-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3><i class="fa-solid fa-chart-pie"></i> Spending by Category</h3>
+                                <p class="panel-subtitle">Visual distribution of your expenditures</p>
+                            </div>
+                            <span class="badge" id="topCategoryBadge">Top: None</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="categoryChart"></canvas>
+                            <div id="noDataChartPlaceholder" class="chart-empty-state">
+                                <i class="fa-solid fa-chart-simple"></i>
+                                <p>No expenses recorded yet</p>
+                                <button class="btn btn-sm btn-outline" onclick="openAddModal()">Add Your First Expense</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Cash Flow Bar Chart -->
+                    <div class="glass-panel chart-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3><i class="fa-solid fa-chart-column"></i> Monthly Cash Flow</h3>
+                                <p class="panel-subtitle">Income vs Expense trends over time</p>
+                            </div>
+                            <div class="chart-time-filter">
+                                <span class="badge badge-success">Income</span>
+                                <span class="badge badge-danger">Expense</span>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="cashflowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Smart Insights -->
+                <div class="insights-activity-grid">
+                    <!-- Smart Financial Insights -->
+                    <div class="glass-panel insights-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-lightbulb"></i> Smart Financial Insights</h3>
+                            <span class="ai-sparkle-pill">Auto-Generated</span>
+                        </div>
+                        <div class="insights-list" id="insightsList">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions Preview -->
+                    <div class="glass-panel recent-panel">
+                        <div class="panel-header">
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Activity</h3>
+                            <button class="ghost-link" onclick="switchTab('transactions')">View All <i class="fa-solid fa-arrow-right"></i></button>
+                        </div>
+                        <div class="recent-list-container" id="recentTransactionsList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 2: UPI HUB & PHONE DIRECT INTEGRATION  -->
+            <!-- ========================================== -->
+            <section id="tab-upi" class="tab-pane">
+                
+                <!-- Hero Header -->
+                <div class="upi-header-banner">
+                    <div class="upi-banner-text">
+                        <h2><i class="fa-solid fa-bolt"></i> Direct Mobile UPI Hub</h2>
+                        <p>Add transactions directly from your phone apps (Google Pay, PhonePe, Paytm, CRED). Scan merchant QR standees with camera, upload payment screenshots, or share directly from your phone's share sheet!</p>
+                    </div>
+                    <div class="upi-action-buttons-top">
+                        <button class="btn btn-primary" onclick="openPhoneConnectModal()">
+                            <i class="fa-solid fa-mobile-screen-button"></i> Connect Phone
+                        </button>
+                        <button class="btn btn-outline" onclick="openCameraQrScanner()">
+                            <i class="fa-solid fa-camera"></i> Scan Merchant QR
+                        </button>
+                        <button class="btn btn-outline" onclick="openScreenshotOcrModal()">
+                            <i class="fa-solid fa-image"></i> Scan Receipt / Screenshot
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Quick Direct Input Cards -->
+                <div class="upi-quick-methods-grid">
+                    <div class="method-card" onclick="openCameraQrScanner()">
+                        <div class="method-icon"><i class="fa-solid fa-camera-retro"></i></div>
+                        <h4>1. Live Camera QR Scan</h4>
+                        <p>Scan any merchant QR standee (BharatPe/Paytm) with phone camera & auto-log</p>
+                        <span class="method-link">Open Scanner <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+
+                    <div class="method-card" onclick="openScreenshotOcrModal()">
+                        <div class="method-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <h4>2. Screenshot / Receipt OCR</h4>
+                        <p>Upload a PhonePe, GPay, or Paytm payment success screenshot</p>
+                        <span class="method-link">Upload Screenshot <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+
+                    <div class="method-card" onclick="document.getElementById('smsRawInput').focus()">
+                        <div class="method-icon"><i class="fa-solid fa-comment-sms"></i></div>
+                        <h4>3. Paste Bank SMS / Alert</h4>
+                        <p>Extract amount, merchant, and UPI UTR directly from bank debit SMS</p>
+                        <span class="method-link">Paste Text Below <i class="fa-solid fa-arrow-down"></i></span>
+                    </div>
+
+                    <div class="method-card" onclick="openPhoneConnectModal()">
+                        <div class="method-icon"><i class="fa-solid fa-share-nodes"></i></div>
+                        <h4>4. Android "Share to App"</h4>
+                        <p>Install as PWA & share receipts directly from phone's native Share Sheet</p>
+                        <span class="method-link">Setup on Phone <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                </div>
+
+                <div class="upi-modules-grid">
+                    
+                    <!-- MODULE 1: Direct UPI QR & Pay Launcher -->
+                    <div class="glass-panel upi-card-box">
+                        <div class="panel-header">
+                            <div>
+                                <h3><i class="fa-solid fa-qrcode"></i> Generate UPI Payment & Record</h3>
+                                <p class="panel-subtitle">Launches GPay/PhonePe directly on mobile & generates dynamic QR on desktop</p>
+                            </div>
+                        </div>
+                        
+                        <div class="upi-form-wrapper">
+                            <div class="form-row">
+                                <div class="form-group flex-2">
+                                    <label for="upiVpa"><i class="fa-solid fa-at"></i> Payee UPI ID (VPA) *</label>
+                                    <input type="text" id="upiVpa" placeholder="e.g. swiggy@icici or 9876543210@paytm" value="merchant@upi">
+                                </div>
+                                <div class="form-group flex-2">
+                                    <label for="upiPayeeName"><i class="fa-solid fa-user"></i> Payee / Store Name</label>
+                                    <input type="text" id="upiPayeeName" placeholder="e.g. Swiggy, DMart, Landlord" value="Store Merchant">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="upiAmount"><i class="fa-solid fa-indian-rupee-sign"></i> Amount (₹) *</label>
+                                    <input type="number" id="upiAmount" placeholder="Amount" value="250" min="1">
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="upiCategory"><i class="fa-solid fa-tags"></i> Category</label>
+                                    <select id="upiCategory">
+                                        <option value="Food & Groceries">Food & Groceries</option>
+                                        <option value="Shopping">Shopping</option>
+                                        <option value="Transportation">Transportation</option>
+                                        <option value="Housing & Utilities">Housing & Utilities</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Insurance & Healthcare">Insurance & Healthcare</option>
+                                        <option value="Debt Repayment">Debt Repayment</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Savings & Investments">Savings & Investments</option>
+                                        <option value="Miscellaneous">Miscellaneous</option>
+                                    </select>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label for="upiNote"><i class="fa-solid fa-comment-dots"></i> Payment Note</label>
+                                    <input type="text" id="upiNote" placeholder="Dinner, Groceries..." value="Dinner with friends">
+                                </div>
+                            </div>
+
+                            <div class="upi-action-bar">
+                                <button class="btn btn-primary" onclick="generateUpiPayment()">
+                                    <i class="fa-solid fa-bolt"></i> Generate UPI QR & Link
+                                </button>
+                                <button class="btn btn-outline" onclick="openCameraQrScanner()">
+                                    <i class="fa-solid fa-camera"></i> Scan Merchant QR
+                                </button>
+                                <button class="btn btn-outline" onclick="loadFrequentUpiContact('swiggy@icici', 'Swiggy', 320, 'Food & Groceries', 'Late dinner')">
+                                    <i class="fa-solid fa-utensils"></i> Swiggy Quick
+                                </button>
+                                <button class="btn btn-outline" onclick="loadFrequentUpiContact('uber@axisbank', 'Uber Rides', 180, 'Transportation', 'Cab to office')">
+                                    <i class="fa-solid fa-taxi"></i> Uber Quick
+                                </button>
+                            </div>
+
+                            <!-- Generated QR and Pay Intent Display -->
+                            <div class="upi-result-box" id="upiResultBox" style="display: none;">
+                                <div class="qr-code-wrapper">
+                                    <div id="upiQrcodeContainer"></div>
+                                    <span class="qr-hint">Scan with GPay / PhonePe / Paytm</span>
+                                </div>
+                                <div class="upi-intent-info">
+                                    <h4 id="upiDisplayTitle">Pay ₹250 to Store Merchant</h4>
+                                    <p class="upi-vpa-text" id="upiDisplayVpa">VPA: merchant@upi</p>
+                                    
+                                    <div class="upi-direct-buttons">
+                                        <!-- Mobile Direct Intent Launcher -->
+                                        <a id="upiMobileIntentBtn" href="#" class="btn btn-success btn-lg" onclick="handleMobileUpiIntentClick()">
+                                            <i class="fa-solid fa-mobile-screen"></i> Pay with Installed UPI App
+                                        </a>
+                                        <button class="btn btn-secondary" onclick="recordUpiPaymentAsExpense()">
+                                            <i class="fa-solid fa-check"></i> Mark Paid & Add to Tracker
+                                        </button>
+                                    </div>
+                                    <span class="small-text"><i class="fa-solid fa-shield-halved"></i> Standard NPCI UPI URI Scheme compliant. Safe & direct.</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- MODULE 2: Direct UPI SMS & Push Notification Parser -->
+                    <div class="glass-panel upi-card-box">
+                        <div class="panel-header">
+                            <div>
+                                <h3><i class="fa-solid fa-message"></i> Instant UPI SMS / Bank Notification Parser</h3>
+                                <p class="panel-subtitle">Paste any SMS or alert from HDFC, SBI, ICICI, Axis, PhonePe or GPay</p>
+                            </div>
+                        </div>
+
+                        <div class="sms-parser-wrapper">
+                            <div class="form-group">
+                                <div class="textarea-header">
+                                    <label for="smsRawInput"><i class="fa-solid fa-paste"></i> Paste Transaction SMS / Alert Text:</label>
+                                    <button class="ghost-link" onclick="pasteFromClipboard()">
+                                        <i class="fa-regular fa-clipboard"></i> Paste from Clipboard
+                                    </button>
+                                </div>
+                                <textarea id="smsRawInput" rows="3" placeholder="e.g. Paid Rs. 420.00 to SWIGGY via UPI Ref 418294719273 on 21-10-2026. Bal: Rs. 14,250.00"></textarea>
+                            </div>
+
+                            <!-- Sample Quick-Fill Buttons -->
+                            <div class="sample-sms-chips">
+                                <span class="chip-label">Try sample bank alerts:</span>
+                                <button class="sample-chip" onclick="fillSampleSms('swiggy')">🍔 Swiggy Debit</button>
+                                <button class="sample-chip" onclick="fillSampleSms('salary')">💰 Salary Credit</button>
+                                <button class="sample-chip" onclick="fillSampleSms('flipkart')">📦 Flipkart Debit</button>
+                                <button class="sample-chip" onclick="fillSampleSms('petrol')">⛽ Petrol Station</button>
+                            </div>
+
+                            <div class="parser-action-bar">
+                                <button class="btn btn-primary" onclick="parseSmsTransaction()">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Detect & Extract
+                                </button>
+                                <button class="btn btn-outline" onclick="clearSmsInput()">Clear</button>
+                            </div>
+
+                            <!-- Parsed Result Card -->
+                            <div class="parsed-preview-card" id="parsedResultCard" style="display: none;">
+                                <div class="parsed-header">
+                                    <span class="parsed-badge" id="parsedTypeBadge">Expense</span>
+                                    <span class="parsed-amount" id="parsedAmount">₹0.00</span>
+                                </div>
+                                <div class="parsed-grid">
+                                    <div>
+                                        <label>Description / Payee:</label>
+                                        <input type="text" id="parsedTitle" class="form-control-sm">
+                                    </div>
+                                    <div>
+                                        <label>Category:</label>
+                                        <select id="parsedCategory" class="form-control-sm">
+                                            <option value="Food & Groceries">Food & Groceries</option>
+                                            <option value="Shopping">Shopping</option>
+                                            <option value="Transportation">Transportation</option>
+                                            <option value="Housing & Utilities">Housing & Utilities</option>
+                                            <option value="Entertainment">Entertainment</option>
+                                            <option value="Insurance & Healthcare">Insurance & Healthcare</option>
+                                            <option value="Debt Repayment">Debt Repayment</option>
+                                            <option value="Salary / Wages">Salary / Wages</option>
+                                            <option value="Savings & Investments">Savings & Investments</option>
+                                            <option value="Miscellaneous">Miscellaneous</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label>UPI Ref / UTR:</label>
+                                        <input type="text" id="parsedRef" class="form-control-sm">
+                                    </div>
+                                    <div>
+                                        <label>Date:</label>
+                                        <input type="date" id="parsedDate" class="form-control-sm">
+                                    </div>
+                                </div>
+                                <div class="parsed-actions">
+                                    <button class="btn btn-success" onclick="commitParsedTransaction()">
+                                        <i class="fa-solid fa-check"></i> Add to Tracker Now
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- MODULE 3: Bank / UPI Statement CSV Importer -->
+                <div class="glass-panel statement-import-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fa-solid fa-file-csv"></i> Import Bank or UPI Statement (CSV)</h3>
+                            <p class="panel-subtitle">Upload export files from Google Pay, PhonePe, Paytm, or bank netbanking</p>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="downloadSampleCsvTemplate()">
+                            <i class="fa-solid fa-download"></i> Sample CSV Template
+                        </button>
+                    </div>
+                    
+                    <div class="statement-dropzone" id="csvDropZone" onclick="document.getElementById('csvFileInput').click()">
+                        <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCsvUpload(event)">
+                        <div class="dropzone-content">
+                            <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                            <h4>Drag & Drop CSV file here, or click to browse</h4>
+                            <p>Supports columns: Date, Description, Amount, Type (Income/Expense), Category</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 3: ALL TRANSACTIONS                    -->
+            <!-- ========================================== -->
+            <section id="tab-transactions" class="tab-pane">
+                
+                <div class="transactions-container glass-panel">
+                    <!-- Filters & Search Toolbar -->
+                    <div class="tx-toolbar">
+                        
+                        <!-- Search Box -->
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="txSearchInput" placeholder="Search by description, UPI ref, category..." oninput="filterTransactions()">
+                            <button id="clearSearchBtn" class="clear-btn" onclick="clearSearch()" style="display: none;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Type Filters -->
+                        <div class="filter-pills-group">
+                            <button class="filter-pill active" data-filter="all" onclick="setTypeFilter('all')">All</button>
+                            <button class="filter-pill" data-filter="expense" onclick="setTypeFilter('expense')">Expenses</button>
+                            <button class="filter-pill" data-filter="income" onclick="setTypeFilter('income')">Income</button>
+                        </div>
+
+                        <!-- Category Filter Dropdown -->
+                        <div class="select-filter-wrap">
+                            <select id="categoryFilterSelect" onchange="filterTransactions()" aria-label="Filter by category">
+                                <option value="all">All Categories</option>
+                                <option value="Food & Groceries">Food & Groceries</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Housing & Utilities">Housing & Utilities</option>
+                                <option value="Insurance & Healthcare">Insurance & Healthcare</option>
+                                <option value="Debt Repayment">Debt Repayment</option>
+                                <option value="Personal care">Personal Care</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Education">Education</option>
+                                <option value="Savings & Investments">Savings & Investments</option>
+                                <option value="Salary / Wages">Salary / Wages</option>
+                                <option value="Gift & Donation">Gift & Donation</option>
+                                <option value="Miscellaneous">Miscellaneous</option>
+                            </select>
+                        </div>
+
+                        <!-- Sort Dropdown -->
+                        <div class="select-filter-wrap">
+                            <select id="sortSelect" onchange="filterTransactions()" aria-label="Sort transactions">
+                                <option value="date-desc">Date: Newest First</option>
+                                <option value="date-asc">Date: Oldest First</option>
+                                <option value="amount-desc">Amount: Highest First</option>
+                                <option value="amount-asc">Amount: Lowest First</option>
+                            </select>
+                        </div>
+
+                        <!-- Add Button -->
+                        <button class="btn btn-primary" onclick="openAddModal()">
+                            <i class="fa-solid fa-plus"></i> Add
+                        </button>
+                    </div>
+
+                    <!-- Batch Actions & Summary Bar -->
+                    <div class="tx-summary-bar">
+                        <span id="filteredStatsText">Showing 0 transactions</span>
+                        <div class="tx-right-actions">
+                            <button class="ghost-link" onclick="exportToCsv()">
+                                <i class="fa-solid fa-file-csv"></i> Export CSV
+                            </button>
+                            <button class="ghost-link danger-link" onclick="openClearAllConfirm()">
+                                <i class="fa-solid fa-trash-can"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Transactions List / Cards -->
+                    <div class="tx-list-wrap">
+                        <ul id="txList" class="tx-items-list">
+                            <!-- Populated dynamically -->
+                        </ul>
+                        
+                        <!-- Empty State -->
+                        <div id="txEmptyState" class="empty-state-card" style="display: none;">
+                            <div class="empty-icon-circle">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                            <h3>No transactions found</h3>
+                            <p>Try adjusting your search filters, or record a new transaction.</p>
+                            <div class="empty-actions">
+                                <button class="btn btn-primary" onclick="openAddModal()">+ Add New Entry</button>
+                                <button class="btn btn-outline" onclick="loadDemoData()">Load Demo Transactions</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 4: FINAI ASSISTANT (CHAT SUPPORT AI)   -->
+            <!-- ========================================== -->
+            <section id="tab-ai" class="tab-pane">
+                
+                <div class="ai-container-grid">
+                    
+                    <!-- Main Chat Pane -->
+                    <div class="glass-panel ai-chat-panel">
+                        <div class="chat-header">
+                            <div class="chat-bot-avatar">
+                                <i class="fa-solid fa-robot"></i>
+                                <span class="online-indicator"></span>
+                            </div>
+                            <div class="chat-bot-info">
+                                <h3>FinAI Assistant <span class="ai-sparkle-pill">Pro</span></h3>
+                                <p id="aiEngineStatus"><i class="fa-solid fa-bolt"></i> Local Smart Financial Engine Active (Instant & Private)</p>
+                            </div>
+                            <div class="chat-header-actions">
+                                <button class="icon-btn" onclick="openAiSettingsModal()" title="Gemini API Key Settings" aria-label="Open AI Settings">
+                                    <i class="fa-solid fa-gear"></i>
+                                </button>
+                                <button class="icon-btn" onclick="clearAiChat()" title="Clear Conversation" aria-label="Clear chat conversation">
+                                    <i class="fa-solid fa-rotate-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages Container -->
+                        <div class="chat-messages-scroll" id="aiChatMessages">
+                            <!-- AI Greeting Message -->
+                            <div class="chat-bubble bot-bubble">
+                                <div class="bot-badge-icon"><i class="fa-solid fa-robot"></i></div>
+                                <div class="bubble-content">
+                                    <p>Hello! I am <b>FinAI</b>, your personal financial advisor.</p>
+                                    <p>I analyze your real-time expenses, help you budget better, and can even log transactions for you directly from natural language!</p>
+                                    <div class="bubble-highlights">
+                                        <span>💡 Try asking:</span>
+                                        <ul>
+                                            <li>"How much did I spend on food this month?"</li>
+                                            <li>"Analyze my spending and give me 3 ways to save money."</li>
+                                            <li>"Add expense: 350 for dinner at Subway"</li>
+                                            <li>"What is my biggest expense so far?"</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Suggested Prompts Carousel -->
+                        <div class="ai-prompts-carousel">
+                            <button class="prompt-chip" onclick="sendAiPrompt('Analyze my spending habits and give me recommendations')">
+                                📊 Analyze my spending
+                            </button>
+                            <button class="prompt-chip" onclick="sendAiPrompt('How much did I spend on Food & Groceries?')">
+                                🍔 Food spending total
+                            </button>
+                            <button class="prompt-chip" onclick="sendAiPrompt('What is my largest expense?')">
+                                🔍 Largest expense
+                            </button>
+                            <button class="prompt-chip" onclick="sendAiPrompt('Can I afford a 5000 purchase right now?')">
+                                💰 Can I afford ₹5,000?
+                            </button>
+                            <button class="prompt-chip" onclick="sendAiPrompt('Give me a 50/30/20 budget breakdown based on my income')">
+                                📈 50/30/20 Budget rule
+                            </button>
+                        </div>
+
+                        <!-- Chat Input Box -->
+                        <form class="chat-input-bar" id="aiChatForm" onsubmit="handleAiSubmit(event)">
+                            <div class="chat-input-wrapper">
+                                <input type="text" id="aiChatInput" placeholder="Ask financial advice or type 'Spent 200 on coffee'..." autocomplete="off">
+                                <button type="button" class="voice-btn" onclick="toggleVoiceInput()" title="Voice input" aria-label="Voice input">
+                                    <i class="fa-solid fa-microphone" id="voiceMicIcon"></i>
+                                </button>
+                            </div>
+                            <button type="submit" class="btn btn-primary send-btn" id="aiSendBtn" aria-label="Send message">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Side AI Financial Coach & Quick Health Score -->
+                    <div class="ai-side-insights">
+                        <!-- Financial Health Score Card -->
+                        <div class="glass-panel health-score-panel">
+                            <div class="panel-header">
+                                <h4><i class="fa-solid fa-heart-pulse"></i> Financial Health Score</h4>
+                                <span class="badge badge-success" id="healthGradeBadge">Good</span>
+                            </div>
+                            <div class="score-circle-container">
+                                <div class="score-circle" id="healthScoreCircle">
+                                    <span class="score-val" id="healthScoreVal">82</span>
+                                    <span class="score-max">/100</span>
+                                </div>
+                            </div>
+                            <p class="score-desc" id="healthScoreDesc">You are maintaining a positive savings balance. Keep expenses within 70% of total income.</p>
+                        </div>
+
+                        <!-- 50/30/20 Rule Breakdown -->
+                        <div class="glass-panel budget-rule-panel">
+                            <div class="panel-header">
+                                <h4><i class="fa-solid fa-scale-balanced"></i> 50 / 30 / 20 Framework</h4>
+                            </div>
+                            <div class="rule-progress-list">
+                                <div class="rule-item">
+                                    <div class="rule-labels">
+                                        <span>Needs (50%)</span>
+                                        <span id="needsPercentText">0%</span>
+                                    </div>
+                                    <div class="progress-track"><div class="progress-fill needs-fill" id="needsProgressBar"></div></div>
+                                </div>
+                                <div class="rule-item">
+                                    <div class="rule-labels">
+                                        <span>Wants (30%)</span>
+                                        <span id="wantsPercentText">0%</span>
+                                    </div>
+                                    <div class="progress-track"><div class="progress-fill wants-fill" id="wantsProgressBar"></div></div>
+                                </div>
+                                <div class="rule-item">
+                                    <div class="rule-labels">
+                                        <span>Savings & Investments (20%)</span>
+                                        <span id="savingsPercentText">0%</span>
+                                    </div>
+                                    <div class="progress-track"><div class="progress-fill savings-fill" id="savingsProgressBar"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span>SpendWise AI • Modern Expense Tracker & UPI Suite</span>
+                <span class="footer-dot">•</span>
+                <span>Protected by Client-side Storage</span>
+                <span class="footer-dot">•</span>
+                <button class="ghost-link" onclick="openPhoneConnectModal()"><i class="fa-solid fa-mobile-screen"></i> Connect Mobile Phone</button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODALS & POPUPS                            -->
+    <!-- ========================================== -->
+
+    <!-- Modal: Phone Connect & Install PWA Modal -->
+    <div class="modal-overlay" id="phoneConnectModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-mobile-screen-button"></i> Add Spends Directly From Phone</h3>
+                <button class="close-btn" onclick="closeModal('phoneConnectModal')" aria-label="Close phone connect modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="phone-connect-content">
+                <p class="modal-desc">Open SpendWise on your mobile phone to scan receipts, use camera QR scanner, and share transactions straight from Google Pay, PhonePe, or Paytm!</p>
+                
+                <!-- Dynamic QR to Open on Phone -->
+                <div class="phone-qr-display-box">
+                    <div id="phoneConnectQrContainer" class="phone-qr-frame"></div>
+                    <div class="phone-qr-info">
+                        <label>Open this URL on your phone browser:</label>
+                        <div class="url-copy-box">
+                            <input type="text" id="phoneConnectUrlInput" readonly value="http://10.75.105.165:8000">
+                            <button class="btn btn-sm btn-primary" onclick="copyPhoneUrl()"><i class="fa-solid fa-copy"></i> Copy</button>
+                        </div>
+                        <span class="small-text"><i class="fa-solid fa-wifi"></i> Ensure your phone is connected to the same Wi-Fi.</span>
+                    </div>
+                </div>
+
+                <!-- 3 Easy Ways on Phone -->
+                <div class="phone-instruction-steps">
+                    <h4>📱 How to log UPI spends from your phone:</h4>
+                    <div class="step-row">
+                        <div class="step-num">1</div>
+                        <div class="step-text"><b>Install as Phone App (PWA):</b> Open the link in Chrome/Safari on phone & tap <i>"Add to Home Screen"</i> or <i>"Install App"</i>.</div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">2</div>
+                        <div class="step-text"><b>Android Native Share:</b> In PhonePe or GPay, tap <b>"Share Receipt"</b> ➔ choose <b>SpendWise AI</b>. It logs automatically!</div>
+                    </div>
+                    <div class="step-row">
+                        <div class="step-num">3</div>
+                        <div class="step-text"><b>Camera & Screenshot OCR:</b> Tap the camera icon in SpendWise to scan store QR codes or upload payment screenshots.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeModal('phoneConnectModal')">Got It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Live Camera UPI QR Scanner -->
+    <div class="modal-overlay" id="cameraQrModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-camera"></i> Scan Merchant UPI QR Code</h3>
+                <button class="close-btn" onclick="closeCameraQrScanner()" aria-label="Close camera QR scanner"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="camera-scanner-wrapper">
+                <p class="modal-desc">Point your camera at any BharatPe, Paytm, PhonePe, or Google Pay QR standee to scan and record.</p>
+                
+                <div id="qrCameraReader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
+                
+                <div id="cameraScanResult" class="camera-scan-success" style="display: none;">
+                    <div class="scan-result-card">
+                        <h4 id="scanResultTitle">Payee Detected</h4>
+                        <p id="scanResultVpa">VPA: merchant@upi</p>
+                        <div class="form-group" style="margin-top: 0.5rem;">
+                            <label>Amount (₹):</label>
+                            <input type="number" id="scanResultAmount" class="form-control-sm" placeholder="Enter amount paid" min="1">
+                        </div>
+                        <div class="scan-actions" style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-success flex-1" onclick="commitCameraScannedUpi()">
+                                <i class="fa-solid fa-check"></i> Record Expense
+                            </button>
+                            <a id="scanPayIntentBtn" href="#" class="btn btn-primary flex-1">
+                                <i class="fa-solid fa-bolt"></i> Pay via UPI App
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeCameraQrScanner()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Screenshot & Receipt OCR Reader -->
+    <div class="modal-overlay" id="screenshotOcrModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-image"></i> Scan UPI Screenshot or Receipt</h3>
+                <button class="close-btn" onclick="closeModal('screenshotOcrModal')" aria-label="Close screenshot OCR modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="ocr-scanner-wrapper">
+                <p class="modal-desc">Upload a payment screenshot from PhonePe, Google Pay, Paytm, or take a photo of a bill receipt. Client-side OCR reads amount & merchant automatically!</p>
+
+                <div class="ocr-dropzone" onclick="document.getElementById('ocrFileInput').click()">
+                    <input type="file" id="ocrFileInput" accept="image/*" style="display: none;" onchange="handleOcrImageUpload(event)">
+                    <i class="fa-solid fa-cloud-arrow-up ocr-icon"></i>
+                    <h4>Choose Screenshot or Take Photo</h4>
+                    <p>Supports PNG, JPG, JPEG from phone gallery</p>
+                </div>
+
+                <!-- Preview Image and Scanning Indicator -->
+                <div id="ocrProgressBox" style="display: none; text-align: center; margin: 1rem 0;">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.5rem; color: var(--accent-primary);"></i>
+                    <p id="ocrStatusText" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">Scanning image for UPI transaction details...</p>
+                    <img id="ocrPreviewImg" alt="Receipt preview" style="max-height: 180px; max-width: 100%; border-radius: 8px; margin-top: 0.75rem; border: 1px solid var(--border-color);">
+                </div>
+
+                <!-- OCR Parsed Fields -->
+                <div id="ocrResultCard" class="parsed-preview-card" style="display: none;">
+                    <div class="parsed-header">
+                        <span class="parsed-badge badge-danger">EXPENSE</span>
+                        <span class="parsed-amount" id="ocrParsedAmount">₹0.00</span>
+                    </div>
+                    <div class="parsed-grid">
+                        <div>
+                            <label>Payee / Description:</label>
+                            <input type="text" id="ocrParsedTitle" class="form-control-sm">
+                        </div>
+                        <div>
+                            <label>Category:</label>
+                            <select id="ocrParsedCategory" class="form-control-sm">
+                                <option value="Food & Groceries">Food & Groceries</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Housing & Utilities">Housing & Utilities</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Insurance & Healthcare">Insurance & Healthcare</option>
+                                <option value="Savings & Investments">Savings & Investments</option>
+                                <option value="Miscellaneous">Miscellaneous</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>UPI Ref / UTR:</label>
+                            <input type="text" id="ocrParsedRef" class="form-control-sm">
+                        </div>
+                        <div>
+                            <label>Date:</label>
+                            <input type="date" id="ocrParsedDate" class="form-control-sm">
+                        </div>
+                    </div>
+                    <div class="parsed-actions">
+                        <button class="btn btn-success" onclick="commitOcrTransaction()">
+                            <i class="fa-solid fa-check"></i> Add to Tracker Now
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('screenshotOcrModal')">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Return From UPI App Payment Confirmation -->
+    <div class="modal-overlay" id="upiReturnConfirmModal" style="display: none;">
+        <div class="modal-box modal-box-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-question"></i> Payment Completed?</h3>
+                <button class="close-btn" onclick="closeModal('upiReturnConfirmModal')" aria-label="Close return confirmation modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="upiReturnConfirmText" class="modal-desc">Did you complete your payment in your UPI app?</p>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('upiReturnConfirmModal')">No, Cancel</button>
+                <button class="btn btn-success" id="upiReturnConfirmBtn"><i class="fa-solid fa-check"></i> Yes, Log Expense</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add / Edit Transaction Modal -->
+    <div class="modal-overlay" id="txModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="txModalTitle"><i class="fa-solid fa-circle-plus"></i> Add Transaction</h3>
+                <button class="close-btn" onclick="closeModal('txModal')" aria-label="Close add or edit transaction modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="txForm" onsubmit="handleTxSubmit(event)">
+                <input type="hidden" id="editingTxId">
+                
+                <!-- Type Toggle: Expense / Income -->
+                <div class="type-toggle-group">
+                    <input type="radio" name="txType" id="typeExpense" value="expense" checked onchange="handleTypeChange()">
+                    <label for="typeExpense" class="type-label expense-label">
+                        <i class="fa-solid fa-arrow-trend-down"></i> Expense
+                    </label>
+
+                    <input type="radio" name="txType" id="typeIncome" value="income" onchange="handleTypeChange()">
+                    <label for="typeIncome" class="type-label income-label">
+                        <i class="fa-solid fa-arrow-trend-up"></i> Income
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="txDesc"><i class="fa-solid fa-align-left"></i> Description *</label>
+                    <input type="text" id="txDesc" placeholder="e.g. Swiggy Dinner, Salary, Uber to airport" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="txAmount"><i class="fa-solid fa-coins"></i> Amount *</label>
+                        <input type="number" id="txAmount" placeholder="0.00" step="any" min="0.01" required>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="txDate"><i class="fa-regular fa-calendar"></i> Date *</label>
+                        <input type="date" id="txDate" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="txCategory"><i class="fa-solid fa-tag"></i> Category *</label>
+                        <select id="txCategory" required>
+                            <option value="Food & Groceries">Food & Groceries</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Housing & Utilities">Housing & Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Insurance & Healthcare">Insurance & Healthcare</option>
+                            <option value="Debt Repayment">Debt Repayment</option>
+                            <option value="Personal care">Personal Care</option>
+                            <option value="Education">Education</option>
+                            <option value="Savings & Investments">Savings & Investments</option>
+                            <option value="Salary / Wages">Salary / Wages</option>
+                            <option value="Gift & Donation">Gift & Donation</option>
+                            <option value="Miscellaneous">Miscellaneous</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group flex-1">
+                        <label for="txPaymentMethod"><i class="fa-solid fa-credit-card"></i> Payment Method</label>
+                        <select id="txPaymentMethod">
+                            <option value="UPI">⚡ UPI (GPay/PhonePe/Paytm)</option>
+                            <option value="Credit Card">💳 Credit Card</option>
+                            <option value="Debit Card">💳 Debit Card</option>
+                            <option value="Cash">💵 Cash</option>
+                            <option value="Net Banking">🏦 Net Banking</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="txUpiRef"><i class="fa-solid fa-fingerprint"></i> UPI Ref / UTR / Note (Optional)</label>
+                    <input type="text" id="txUpiRef" placeholder="e.g. UPI Ref 418294719273">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('txModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveTxBtn">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Budget Setting Modal -->
+    <div class="modal-overlay" id="budgetModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-bullseye"></i> Set Monthly Budget Target</h3>
+                <button class="close-btn" onclick="closeModal('budgetModal')" aria-label="Close budget modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleBudgetSubmit(event)">
+                <p class="modal-desc">Define your maximum desired spending threshold for this month. We'll track your real-time pace and warn you when nearing the limit.</p>
+                <div class="form-group">
+                    <label for="budgetInput"><i class="fa-solid fa-indian-rupee-sign"></i> Monthly Budget Amount</label>
+                    <input type="number" id="budgetInput" placeholder="30000" min="500" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('budgetModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Budget Target</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Data Backup, Import & Export Modal -->
+    <div class="modal-overlay" id="dataModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-database"></i> Backup & Data Management</h3>
+                <button class="close-btn" onclick="closeModal('dataModal')" aria-label="Close backup modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="backup-options-list">
+                <div class="backup-option-card">
+                    <div>
+                        <h4><i class="fa-solid fa-file-csv"></i> Export to CSV</h4>
+                        <p>Download your complete expense & income log formatted for Microsoft Excel or Google Sheets.</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="exportToCsv()">Export CSV</button>
+                </div>
+
+                <div class="backup-option-card">
+                    <div>
+                        <h4><i class="fa-solid fa-file-code"></i> Export Full JSON Backup</h4>
+                        <p>Save all your transactions, budgets, settings, and custom UPI presets into a single backup file.</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="exportToJsonBackup()">Save JSON</button>
+                </div>
+
+                <div class="backup-option-card">
+                    <div>
+                        <h4><i class="fa-solid fa-file-import"></i> Restore from JSON Backup</h4>
+                        <p>Restore your saved tracker data from a previously exported backup file.</p>
+                    </div>
+                    <label class="btn btn-outline" style="cursor: pointer;">
+                        Choose File
+                        <input type="file" id="jsonBackupInput" accept=".json" style="display: none;" onchange="handleJsonRestore(event)">
+                    </label>
+                </div>
+
+                <div class="backup-option-card">
+                    <div>
+                        <h4><i class="fa-solid fa-flask"></i> Load Demo Transactions</h4>
+                        <p>Quickly fill tracker with realistic Indian UPI transactions (Swiggy, Uber, Electricity, Salary) for testing.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="loadDemoData()">Load Demo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: AI Settings / Gemini Key Modal -->
+    <div class="modal-overlay" id="aiSettingsModal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gear"></i> FinAI Configuration</h3>
+                <button class="close-btn" onclick="closeModal('aiSettingsModal')" aria-label="Close AI settings modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="ai-settings-body">
+                <p>FinAI has a high-performance <b>Local Financial Engine</b> that runs 100% offline, privately, and for free in your browser.</p>
+                
+                <hr class="divider">
+                
+                <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Optional: Connect Google Gemini LLM</h4>
+                <p class="modal-desc">For advanced open-ended conversational financial advice, deep investment coaching, and tax-saving ideas, you can connect your free Google Gemini API key.</p>
+                
+                <div class="form-group">
+                    <label for="geminiApiKeyInput"><i class="fa-solid fa-key"></i> Gemini API Key (Stored safely only in your browser's localStorage)</label>
+                    <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy...">
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="removeGeminiKey()">Clear Key</button>
+                    <button class="btn btn-primary" onclick="saveGeminiKey()">Save Configuration</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal" style="display: none;">
+        <div class="modal-box modal-box-sm">
+            <div class="modal-header">
+                <h3 class="danger-text"><i class="fa-solid fa-triangle-exclamation"></i> Are you sure?</h3>
+                <button class="close-btn" onclick="closeModal('confirmModal')" aria-label="Close delete confirmation modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="confirmModalText" class="modal-desc">This action cannot be undone.</p>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('confirmModal')">Cancel</button>
+                <button class="btn btn-danger" id="confirmActionBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Main JavaScript App Logic -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="main">
+        <h1>Expense Tracker</h1>
+        <div id="head">
+            <span id="inc">
+                <b>Income</b><br>
+                <span id="incValue"></span>
+            </span>
+            <span id="exp">
+                <b>Expense</b><br>
+                <span id="expValue"></span>
+            </span>
+            <span id="bal">
+                <b>Net Balance</b><br>
+                <span id="balValue"></span>
+            </span>
+        </div>
+        <div class="main2">
+            <div id="add_item">
+                <p>Add item</p>
+                <div class="radio1">
+                    <input class="radio__input1" type="radio" name="bt1" id="ep1" checked>  
+                    <label class="radio__label1" for="ep1">Expense</label>
+                    <input class="radio__input1" type="radio" name="bt1" id="in1">
+                    <label class="radio__label1" for="in1">Income</label>
+                </div>
+
+                <br>
+                Description <input type="text" id="detail" placeholder="Fees..."> 
+                <br>
+                Amount <input type="number" id="amt" placeholder="Ruppee...">
+                <br>
+                <label for="cat">Category</label>
+                <select id="cat">
+                    <option value="none">--Select Item--</option>
+                    <option value="Housing & Utility">Housing & Utility</option>
+                    <option value="Transportation">Transpoartation</option>
+                    <option value="Food & Groceries">Food & Groceries</option>
+                    <option value="Insurance & Healthcare">Insurance & Healthcare</option>
+                    <option value="Debt Repayment">Debt Repayment</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Personal care">Personal care</option>
+                    <option value="Enterainment">Enterainment</option>
+                    <option value="Gift & Donation">Gift & Donation</option>
+                    <option value="Pets">Pets</option>
+                    <option value="Education">Education</option>
+                    <option value="Savings & Investments">Savings & Investments</option>
+                    <option value="Miscellaneous">Miscellaneous</option>
+                </select><br>
+
+                <label for="DATE">Date</label>
+                <input type="date" id="DATE"> 
+                <br>
+                <button onclick="result()" id="submit">Submit</button>
+            </div>
+
+
+
+
+            <div id="enter">
+                <p>Data Entry</p> <br>
+                <div class="radio2">
+                    <input class="radio__input" type="radio" name="b1" id="all" checked onclick="exp_list()">
+                    <label class="radio__label" for="all" id="lbl2" >Entries</label>
+                    <input class="radio__input" type="radio" name="b1" id="ep2" onclick="exp_list()">
+                    <label class="radio__label" for="ep2" id="lbl2">Expense</label>
+                    <input class="radio__input" type="radio" name="b1" id="in2" onclick="exp_list()">
+                    <label class="radio__label" for="in2" id="lbl2">Income</label>
+                </div>
+                <div id="list_item">
+                    <ul id="list"></ul>
+                </div>
+                <button id="clear" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
